@@ -1,0 +1,5 @@
+# ignore Code/data folder
+/Code/data
+/Code/saved_models
+/Code/results
+archive.zip

@@ -31,13 +31,14 @@ class Encoder(nn.Module):
         x = self.act(self.bn4(self.conv4(x)))
         
         # Flatten the tensor
-        x = x.view(x.size(0), -1)
+        x = x.view(x.size(0), -1) # shape: (batch_size, 256 * 4 * 4)
         
         # Calculate mean (mu) and log variance (logvar) using the fully connected layers
-        mu = self.fc_mu(x)
+        mu = self.fc_mu(x) # shape: (batch_size, latent_dim)
         logvar = self.fc_logvar(x)
         
         return mu, logvar
+    
 class Decoder(nn.Module):
     def __init__(self, latent_dim):
         super(Decoder, self).__init__()

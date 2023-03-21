@@ -1,6 +1,8 @@
+import os
 import torch
 import torch.optim as optim
 from torch.utils.data import random_split, DataLoader
+from constants import TRAIN_TRANSFORM, batch_size, latent_dim, lr, epochs
 
 from dataset import CelebADataset
 from model import VAE
@@ -8,27 +10,22 @@ from utils import train_vae, validate_vae
 from visualize import plot_loss
 
 if __name__ == '__main__':
-    
-    # Define hyperparameters
-    batch_size = 128
-    latent_dim = 128
-    lr = 0.0001
-    epochs = 50
 
     # Set random seed for reproducibility
     torch.manual_seed(0)
 
     # Load and split the CelebA dataset
     # Next line tor directory moto change kore nish
-    celeba_data_path = 'path/to/your/extracted/CelebA/folder'
-    dataset = CelebADataset(celeba_data_path)
+    celeba_data_path = './Code/data/img_align_celeba/img_align_celeba/'
+    
+    dataset = CelebADataset(celeba_data_path, transform=TRAIN_TRANSFORM)
 
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
     
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
 
     # Create the VAE model and optimizer
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -46,9 +43,11 @@ if __name__ == '__main__':
         val_losses.append(val_loss)
 
         # Save the trained model and its weights
-        # Directory mon moto change kore nish
         if epoch == epochs:
-            torch.save(model.state_dict(), 'models/vae.pth')
+            if os.path.exists('./Code/saved_models') == False:
+                os.mkdir('./Code/saved_models')
+            
+            torch.save(model.state_dict(), './Code/saved_models/vae.pth')
     
     # Save the epoch losses in a file
     with open('results/epoch_losses.txt', 'w') as f:

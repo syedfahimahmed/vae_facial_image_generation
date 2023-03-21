@@ -8,6 +8,12 @@ class CelebADataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
         self.image_list = os.listdir(root_dir)
+
+        # take 20% of the dataset
+        self.image_list = self.image_list[:int(0.2*len(self.image_list))]
+
+        print(f'Number of images: {len(self.image_list)}')
+
         self.transform = transform
 
     def __len__(self):
@@ -31,6 +37,6 @@ def get_celeba_dataloader(root_dir, batch_size, img_size):
     ])
 
     dataset = CelebADataset(root_dir, transform)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
     return dataloader
