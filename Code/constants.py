@@ -3,7 +3,7 @@ from torchvision import transforms
 batch_size = 4096
 latent_dim = 128
 lr = 0.001
-epochs = 200
+epochs = 100
 img_size = 64
 
 TRAIN_TRANSFORM = transforms.Compose([

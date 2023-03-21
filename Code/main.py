@@ -2,6 +2,7 @@ import os
 import torch
 import torch.optim as optim
 from torch.utils.data import random_split, DataLoader
+from early_stopping import EarlyStopping
 from constants import TRAIN_TRANSFORM, batch_size, latent_dim, lr, epochs
 
 from dataset import CelebADataset
@@ -41,16 +42,9 @@ if __name__ == '__main__':
         print(f'Epoch {epoch}: train loss={train_loss:.4f}, val loss={val_loss:.4f}')
         train_losses.append(train_loss)
         val_losses.append(val_loss)
-
-        # Save the trained model and its weights
-        if epoch == epochs:
-            if os.path.exists('./Code/saved_models') == False:
-                os.mkdir('./Code/saved_models')
-            
-            torch.save(model.state_dict(), './Code/saved_models/vae.pth')
     
     # Save the epoch losses in a file
-    with open('results/epoch_losses.txt', 'w') as f:
+    with open('./Code/results/epoch_losses.txt', 'w') as f:
         for epoch, train_loss, val_loss in zip(range(1, epochs+1), train_losses, val_losses):
             f.write(f'Epoch {epoch}, Train loss {train_loss:.4f}, Val loss {val_loss:.4f}\n')
 
