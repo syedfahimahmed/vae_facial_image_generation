@@ -1,6 +1,6 @@
 from torchvision import transforms
 
-batch_size = 4096
+batch_size = 128
 latent_dim = 128
 lr = 0.001
 epochs = 100

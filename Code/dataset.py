@@ -9,8 +9,8 @@ class CelebADataset(Dataset):
         self.root_dir = root_dir
         self.image_list = os.listdir(root_dir)
 
-        # take 20% of the dataset
-        self.image_list = self.image_list[:int(0.2*len(self.image_list))]
+        # take 50% of the dataset
+        self.image_list = self.image_list[:int(0.5*len(self.image_list))]
 
         print(f'Number of images: {len(self.image_list)}')
 

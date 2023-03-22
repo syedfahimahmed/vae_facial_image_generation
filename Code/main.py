@@ -16,7 +16,7 @@ if __name__ == '__main__':
     torch.manual_seed(0)
 
     # Load and split the CelebA dataset
-    # Next line tor directory moto change kore nish
+    early_stopping = EarlyStopping(patience=10, verbose=True)
     celeba_data_path = './Code/data/img_align_celeba/img_align_celeba/'
     
     dataset = CelebADataset(celeba_data_path, transform=TRAIN_TRANSFORM)
@@ -42,6 +42,12 @@ if __name__ == '__main__':
         print(f'Epoch {epoch}: train loss={train_loss:.4f}, val loss={val_loss:.4f}')
         train_losses.append(train_loss)
         val_losses.append(val_loss)
+
+        early_stopping(val_loss, model)
+
+        if early_stopping.early_stop:
+            print("Early stopping")
+            break
     
     # Save the epoch losses in a file
     with open('./Code/results/epoch_losses.txt', 'w') as f:
