@@ -37,7 +37,7 @@ class Encoder(nn.Module):
         mu = self.fc_mu(x) # shape: (batch_size, latent_dim)
         logvar = self.fc_logvar(x)
         
-        return mu, logvar
+        return x, mu, logvar
     
 class Decoder(nn.Module):
     def __init__(self, latent_dim):
@@ -90,7 +90,7 @@ class VAE(nn.Module):
 
     def forward(self, x):
         # Pass the input through the Encoder network to obtain the mean (mu) and log variance (logvar)
-        mu, logvar = self.encoder(x)
+        _, mu, logvar = self.encoder(x)
         
         # Reparameterize the latent space using the mean and log variance
         z = self.reparameterize(mu, logvar)
