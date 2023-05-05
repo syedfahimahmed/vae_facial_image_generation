@@ -41,7 +41,8 @@ if __name__ == '__main__':
     # Create the VAE model and optimizer
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = CVAE(latent_dim, n_attributes).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    #optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
 
     # Train the VAE model
     train_losses = []

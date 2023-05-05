@@ -7,28 +7,30 @@ class Encoder(nn.Module):
 
         self.conv1 = nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1)
         self.bn1 = nn.BatchNorm2d(32)
-        
+
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1)
         self.bn2 = nn.BatchNorm2d(64)
-        
+
         self.conv3 = nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1)
         self.bn3 = nn.BatchNorm2d(128)
-        
+
         self.conv4 = nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1)
         self.bn4 = nn.BatchNorm2d(256)
-        
+
         self.act = nn.ReLU()
-        
+
+        self.dropout = nn.Dropout(0.5)
+
         # Define the fully connected layers for mean (mu) and log variance (logvar)
         self.fc_mu = nn.Linear(256 * 4 * 4 + num_attrs, latent_dim)
         self.fc_logvar = nn.Linear(256 * 4 * 4 + num_attrs, latent_dim)
 
     def forward(self, x, attrs):
 
-        x = self.act(self.bn1(self.conv1(x)))
-        x = self.act(self.bn2(self.conv2(x)))
-        x = self.act(self.bn3(self.conv3(x)))
-        x = self.act(self.bn4(self.conv4(x)))
+        x = self.dropout(self.act(self.bn1(self.conv1(x))))
+        x = self.dropout(self.act(self.bn2(self.conv2(x))))
+        x = self.dropout(self.act(self.bn3(self.conv3(x))))
+        x = self.dropout(self.act(self.bn4(self.conv4(x))))
         
         # Flatten the tensor
         x = x.view(x.size(0), -1) # shape: (batch_size, 256 * 4 * 4)
@@ -64,8 +66,9 @@ class Decoder(nn.Module):
 
         self.act = nn.ReLU()
 
+        self.dropout = nn.Dropout(0.5)
+
         # Add a linear layer for attribute reconstruction
-        #added line
         self.fc_attr1 = nn.Linear(256 * 4 * 4, 1024)
         self.fc_attr2 = nn.Linear(1024, num_attrs)
 
@@ -74,17 +77,15 @@ class Decoder(nn.Module):
         z = self.act(self.bn2(self.fc2(z)))
         z = z.view(-1, 256, 4, 4)
         
-        #added lines
         z_attr = z.view(-1, 256 * 4 * 4)
         z_attr = self.act(self.bn1(self.fc_attr1(z_attr)))
+        z_attr = self.dropout(z_attr)  # Apply dropout
         attr_recon = self.fc_attr2(z_attr)
+        
         z = self.act(self.bn3(self.conv1(z)))
         z = self.act(self.bn4(self.conv2(z)))
         z = self.act(self.bn5(self.conv3(z)))
         x_recon = torch.tanh(self.conv4(z))
-
-        # Attribute reconstruction
-        #attr_recon = self.fc_attr(z)
 
         return x_recon, attr_recon
 

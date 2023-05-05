@@ -3,6 +3,7 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
+import numpy as np
 
 class CelebADataset(Dataset):
     def __init__(self, root_dir, attributes_df, transform=None):
@@ -28,7 +29,8 @@ class CelebADataset(Dataset):
         attrs = self.attributes_df.loc[self.attributes_df["image_id"] == self.image_list[idx]].values[0][1:]
         # Change attribute values from -1 to 1 range to 0 to 1 range
         attrs = (attrs + 1) / 2
-        attrs = torch.tensor(attrs.astype(float), dtype=torch.float32)
+        attrs = attrs.astype(np.float32)  # Convert attributes to float32
+        attrs = torch.tensor(attrs)        # Create a tensor without specifying the dtype (it will infer the dtype from the data)
 
         if self.transform:
             img = self.transform(img)
