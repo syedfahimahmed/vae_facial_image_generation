@@ -82,5 +82,5 @@ def plot_representation(latent_rep, labels):
     plt.figure(figsize=(10, 10))
     plt.scatter(latent_rep[:, 0], latent_rep[:, 1], c=labels, cmap='tab10')
     plt.colorbar()
-    plt.savefig('./Code/results/latent_rep.png')
+    plt.savefig('./results/latent_rep.png')
     plt.show()

@@ -36,6 +36,7 @@ class CelebADataset(Dataset):
 
         # get the smiling column from the dataframe
         smiling = self.df.loc[self.df['image_id'] == image_id, 'Smiling'].values[0]
+        smiling = (smiling + 1) // 2 # convert from {-1, 1} to {0, 1}
 
         # convert to tensor
         smiling = torch.tensor(smiling, dtype=torch.long)
