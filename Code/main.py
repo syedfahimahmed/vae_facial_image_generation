@@ -6,9 +6,10 @@ from early_stopping import EarlyStopping
 from constants import TRAIN_TRANSFORM, batch_size, latent_dim, lr, epochs
 
 from dataset import CelebADataset
-from model import VAE
+from model import CVAE
 from utils import train_vae, validate_vae
 from visualize import plot_loss
+import pandas as pd
 
 if __name__ == '__main__':
 
@@ -17,9 +18,18 @@ if __name__ == '__main__':
 
     # Load and split the CelebA dataset
     early_stopping = EarlyStopping(patience=10, verbose=True)
-    celeba_data_path = './Code/data/img_align_celeba/img_align_celeba/'
+    celeba_data_path = './Code/data/img_align_celeba/img_align_celeba/img_align_celeba'
     
-    dataset = CelebADataset(celeba_data_path, transform=TRAIN_TRANSFORM)
+    # Read the attributes CSV file
+    attributes_df = pd.read_csv("./Code/data/img_align_celeba/list_attr_celeba.csv")
+    
+    # Take 50% of the attribute data
+    attributes_df = attributes_df[:int(0.5 * len(attributes_df))]
+    
+    # Number of attributes
+    n_attributes = attributes_df.shape[1] - 1
+    
+    dataset = CelebADataset(celeba_data_path, attributes_df, transform=TRAIN_TRANSFORM)
 
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
@@ -30,7 +40,7 @@ if __name__ == '__main__':
 
     # Create the VAE model and optimizer
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = VAE(latent_dim).to(device)
+    model = CVAE(latent_dim, n_attributes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # Train the VAE model

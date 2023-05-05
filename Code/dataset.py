@@ -5,8 +5,9 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 class CelebADataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, attributes_df, transform=None):
         self.root_dir = root_dir
+        self.attributes_df = attributes_df
         self.image_list = os.listdir(root_dir)
 
         # take 50% of the dataset
@@ -22,13 +23,19 @@ class CelebADataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.root_dir, self.image_list[idx])
         img = Image.open(img_path).convert('RGB')
+        
+        # Get the attributes for the current image
+        attrs = self.attributes_df.loc[self.attributes_df["image_id"] == self.image_list[idx]].values[0][1:]
+        # Change attribute values from -1 to 1 range to 0 to 1 range
+        attrs = (attrs + 1) / 2
+        attrs = torch.tensor(attrs.astype(float), dtype=torch.float32)
 
         if self.transform:
             img = self.transform(img)
 
-        return img
+        return img, attrs
 
-def get_celeba_dataloader(root_dir, batch_size, img_size):
+def get_celeba_dataloader(root_dir, attributes_df, batch_size, img_size):
     transform = transforms.Compose([
         transforms.Resize(img_size),
         transforms.CenterCrop(img_size),
@@ -36,7 +43,7 @@ def get_celeba_dataloader(root_dir, batch_size, img_size):
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    dataset = CelebADataset(root_dir, transform)
+    dataset = CelebADataset(root_dir, attributes_df, transform) # Pass attributes_df here
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
     return dataloader

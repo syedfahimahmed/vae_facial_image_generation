@@ -37,5 +37,5 @@ class EarlyStopping:
         if not os.path.exists('./Code/saved_models'):
             os.makedirs('./Code/saved_models')
 
-        torch.save(model.state_dict(), './Code/saved_models/vae.pth')
+        torch.save(model.state_dict(), './Code/saved_models/cvae.pth')
         self.val_loss_min = val_loss
