@@ -22,7 +22,7 @@ if __name__ == '__main__':
     
     # Read the attributes CSV file
     attributes_df = pd.read_csv("./Code/data/list_attr_celeba.csv")
-    attributes_df.replace(to_replace=-1, value=0, inplace=True) # Change -1 values in the dataframe to 0
+    # attributes_df.replace(to_replace=-1, value=0, inplace=True) # Change -1 values in the dataframe to 0
     
     # Number of attributes
     n_attributes = attributes_df.shape[1] - 1

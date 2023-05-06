@@ -45,7 +45,7 @@ class Encoder(nn.Module):
         mu = self.fc_mu(x) # shape: (batch_size, latent_dim)
         logvar = self.fc_logvar(x)
         
-        return mu, logvar
+        return x, mu, logvar
     
 class Decoder(nn.Module):
     def __init__(self, latent_dim, num_attrs):
@@ -102,7 +102,7 @@ class CVAE(nn.Module):
 
     def forward(self, x, attrs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # Pass the input and attributes through the Encoder network to obtain the mean (mu) and log variance (logvar)
-        mu, logvar = self.encoder(x, attrs)
+        _, mu, logvar = self.encoder(x, attrs)
 
         # Reparameterize the latent space using the mean and log variance
         z = self.reparameterize(mu, logvar)
