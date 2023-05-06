@@ -6,7 +6,7 @@ from early_stopping import EarlyStopping
 from constants import TRAIN_TRANSFORM, batch_size, latent_dim, lr, epochs
 
 from dataset import CelebADataset
-from model import CVAE
+from cvae.model import CVAE
 from utils import train_vae, validate_vae
 from visualize import plot_loss
 import pandas as pd

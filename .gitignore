@@ -1,6 +1,6 @@
 # ignore Code/data folder
-/Code/data
-/Code/saved_models
-/Code/results
+/data
+/saved_models
+/results
 archive.zip
-/Code/__pycache__
+/__pycache__
