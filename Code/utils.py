@@ -4,20 +4,16 @@ import torch.nn as nn
 from tqdm import tqdm
 from torchvision.utils import save_image
 
-def cvae_loss(x, x_recon, mu, logvar, attr, attr_recon):
+def cvae_loss(x, x_recon, mu, logvar):
     # Reconstruction loss
     mse = nn.MSELoss(reduction='sum')
     recon_loss = mse(x_recon, x)
-    
-    # Attribute loss
-    bce = nn.BCEWithLogitsLoss(reduction='sum')
-    attr_loss = bce(attr_recon, attr)
     
     # KL divergence loss
     kld_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     
     # Total loss
-    loss = recon_loss + attr_loss + kld_loss
+    loss = recon_loss + kld_loss
     return loss / x.size(0)
 
 def train_vae(model, dataloader, optimizer, epoch, num_epochs, device):
@@ -32,10 +28,10 @@ def train_vae(model, dataloader, optimizer, epoch, num_epochs, device):
         optimizer.zero_grad()
         
         # Forward pass: pass images and attrs through the CVAE model to get reconstructed images, mean, log variance, and reconstructed attributes
-        x_recon, mu, logvar, attr_recon = model(images, attrs)
+        x_recon, mu, logvar = model(images, attrs)
         
         # Calculate the combined loss for the current batch
-        loss = cvae_loss(images, x_recon, mu, logvar, attrs, attr_recon)
+        loss = cvae_loss(images, x_recon, mu, logvar)
         
         loss.backward()
         optimizer.step()
@@ -54,8 +50,8 @@ def validate_vae(model, dataloader, epoch, num_epochs, device):
         for images, attrs in tqdm(dataloader, desc=f"Epoch [{epoch}/{num_epochs}]"):
             images = images.to(device)
             attrs = attrs.to(device)
-            x_recon, mu, logvar, attr_recon = model(images, attrs) # get reconstructed images, mean, log variance, and reconstructed attributes
-            loss = cvae_loss(images, x_recon, mu, logvar, attrs, attr_recon) # calculate the combined loss for the current batch
+            x_recon, mu, logvar = model(images, attrs) # get reconstructed images, mean, log variance, and reconstructed attributes
+            loss = cvae_loss(images, x_recon, mu, logvar) # calculate the combined loss for the current batch
             val_loss += loss.item()
             
             # Save the first batch of images for visualization

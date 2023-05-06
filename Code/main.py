@@ -18,25 +18,21 @@ if __name__ == '__main__':
 
     # Load and split the CelebA dataset
     early_stopping = EarlyStopping(patience=10, verbose=True)
-    celeba_data_path = './Code/data/img_align_celeba/img_align_celeba/img_align_celeba'
+    celeba_data_path = './Code/data/img_align_celeba/img_align_celeba/'
     
     # Read the attributes CSV file
-    attributes_df = pd.read_csv("./Code/data/img_align_celeba/list_attr_celeba.csv")
-    
-    # Take 50% of the attribute data
-    attributes_df = attributes_df[:int(0.5 * len(attributes_df))]
+    attributes_df = pd.read_csv("./Code/data/list_attr_celeba.csv")
+    attributes_df.replace(to_replace=-1, value=0, inplace=True) # Change -1 values in the dataframe to 0
     
     # Number of attributes
     n_attributes = attributes_df.shape[1] - 1
     
     dataset = CelebADataset(celeba_data_path, attributes_df, transform=TRAIN_TRANSFORM)
 
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    train_dataset, val_dataset = random_split(dataset, [0.8, 0.2])
     
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=16, pin_memory=True)
 
     # Create the VAE model and optimizer
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

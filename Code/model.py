@@ -5,7 +5,9 @@ class Encoder(nn.Module):
     def __init__(self, latent_dim, num_attrs):
         super(Encoder, self).__init__()
 
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1)
+        self.linear1 = nn.Linear(num_attrs, 64 * 64)
+
+        self.conv1 = nn.Conv2d(3+1, 32, kernel_size=4, stride=2, padding=1)
         self.bn1 = nn.BatchNorm2d(32)
 
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1)
@@ -22,10 +24,14 @@ class Encoder(nn.Module):
         self.dropout = nn.Dropout(0.5)
 
         # Define the fully connected layers for mean (mu) and log variance (logvar)
-        self.fc_mu = nn.Linear(256 * 4 * 4 + num_attrs, latent_dim)
-        self.fc_logvar = nn.Linear(256 * 4 * 4 + num_attrs, latent_dim)
+        self.fc_mu = nn.Linear(256 * 4 * 4, latent_dim)
+        self.fc_logvar = nn.Linear(256 * 4 * 4, latent_dim)
 
-    def forward(self, x, attrs):
+    def forward(self, x, c):
+        embed_class = self.linear1(c)
+        embed_class = embed_class.view(-1, 1, 64, 64)
+
+        x = torch.cat([x, embed_class], dim=1)
 
         x = self.dropout(self.act(self.bn1(self.conv1(x))))
         x = self.dropout(self.act(self.bn2(self.conv2(x))))
@@ -34,9 +40,6 @@ class Encoder(nn.Module):
         
         # Flatten the tensor
         x = x.view(x.size(0), -1) # shape: (batch_size, 256 * 4 * 4)
-        
-        # Concatenate the attributes to the flattened tensor
-        x = torch.cat((x, attrs), dim=1)
         
         # Calculate mean (mu) and log variance (logvar) using the fully connected layers
         mu = self.fc_mu(x) # shape: (batch_size, latent_dim)
@@ -48,7 +51,7 @@ class Decoder(nn.Module):
     def __init__(self, latent_dim, num_attrs):
         super(Decoder, self).__init__()
 
-        self.fc1 = nn.Linear(latent_dim, 1024)
+        self.fc1 = nn.Linear(latent_dim + num_attrs, 1024)
         self.bn1 = nn.BatchNorm1d(1024)
 
         self.fc2 = nn.Linear(1024, 4 * 4 * 256)
@@ -68,26 +71,17 @@ class Decoder(nn.Module):
 
         self.dropout = nn.Dropout(0.5)
 
-        # Add a linear layer for attribute reconstruction
-        self.fc_attr1 = nn.Linear(256 * 4 * 4, 1024)
-        self.fc_attr2 = nn.Linear(1024, num_attrs)
-
-    def forward(self, z, attrs):
+    def forward(self, z):
         z = self.act(self.bn1(self.fc1(z)))
         z = self.act(self.bn2(self.fc2(z)))
         z = z.view(-1, 256, 4, 4)
-        
-        z_attr = z.view(-1, 256 * 4 * 4)
-        z_attr = self.act(self.bn1(self.fc_attr1(z_attr)))
-        z_attr = self.dropout(z_attr)  # Apply dropout
-        attr_recon = self.fc_attr2(z_attr)
         
         z = self.act(self.bn3(self.conv1(z)))
         z = self.act(self.bn4(self.conv2(z)))
         z = self.act(self.bn5(self.conv3(z)))
         x_recon = torch.tanh(self.conv4(z))
 
-        return x_recon, attr_recon
+        return x_recon
 
 class CVAE(nn.Module):
     def __init__(self, latent_dim, num_attrs):
@@ -106,14 +100,16 @@ class CVAE(nn.Module):
         # Reparameterize the latent space using the calculated mean, standard deviation, and noise
         return mu + eps * std
 
-    def forward(self, x, attrs):
+    def forward(self, x, attrs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # Pass the input and attributes through the Encoder network to obtain the mean (mu) and log variance (logvar)
         mu, logvar = self.encoder(x, attrs)
 
         # Reparameterize the latent space using the mean and log variance
         z = self.reparameterize(mu, logvar)
 
-        # Pass the reparameterized latent space vector and attributes through the Decoder network to reconstruct the input
-        x_recon, attr_recon = self.decoder(z, attrs)
+        z = torch.cat([z, attrs], dim=1)
 
-        return x_recon, mu, logvar, attr_recon
+        # Pass the reparameterized latent space vector and attributes through the Decoder network to reconstruct the input
+        x_recon = self.decoder(z)
+
+        return x_recon, mu, logvar
