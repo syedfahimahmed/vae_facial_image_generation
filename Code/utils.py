@@ -1,8 +1,12 @@
 import os
+import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 from torchvision.utils import save_image
+from sklearn.manifold import TSNE
+
+import matplotlib.pyplot as plt
 
 def cvae_loss(x, x_recon, mu, logvar):
     # Reconstruction loss
@@ -68,3 +72,17 @@ def validate_vae(model, dataloader, epoch, num_epochs, device):
 
     val_loss /= len(dataloader)
     return val_loss
+
+def get_tsne(latent_rep, no_components=2):
+    tsne = TSNE(n_components=no_components, random_state=0)
+    
+    latent_tsne = tsne.fit_transform(latent_rep)
+    
+    return latent_tsne
+
+def plot_representation(latent_rep, labels):
+    plt.figure(figsize=(10, 10))
+    plt.scatter(latent_rep[:, 0], latent_rep[:, 1], c=labels, cmap='tab10')
+    plt.colorbar()
+    plt.savefig('./results/latent_rep.png')
+    plt.show()
